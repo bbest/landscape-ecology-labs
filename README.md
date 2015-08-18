@@ -2,7 +2,7 @@
 
 These Landscape Ecology labs were taught winter quarter 2015 at the [Bren School, UCSB](http://www.bren.ucsb.edu). Originally posted in a private online courseware GauchoSpace. Quickly posting this content for [NEON spatio-temporal data hackathon](http://www.neoninc.org/updates-events/events/hackathon-spatio-temporal-data-lesson-building).
 
-For an overview of the course, see the [syllabus](_syllabus.pdf).
+For an overview of the course, see the [syllabus](https://github.com/bbest/landscape-ecology-labs/raw/gh-pages/_syllabus.pdf).
 
 ## Labs
 
@@ -14,8 +14,8 @@ Used Rmarkdown to weave instructions with data preparation for various external 
     - [lab1_introduction.pptx](lab1_introduction.pptx)
 
 1. **Scale**: Quantifying Landcover Changes in Time and Space using R
-    - [lab2_scale.html](wk02_scale/lab2_scale.html)
-    - [lab2_scale.7z](wk02_scale/lab2_scale.7z)
+    - [lab2_scale.html](lab2_scale.html)
+    - [lab2_scale.7z](lab2_scale.7z)
 
 1. **Agents**: Physical Controls on Vegetation using ArcGIS
     - [lab3.html](lab3.html)
