@@ -1,0 +1,476 @@
+---
+title: "Lab 9. Planning"
+author: "Ben Best"
+date: "Mar 5, 2015"
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+---
+
+Due: 5pm Fri, Mar 20 2015 via GauchoSpace
+
+# Introduction {-}
+
+In this conservation planning lab, you'll work with software Marxan to select sites for a reserve network that maximise species richness while minimizing site selection cost. In previous labs, you built a single species distribution model, evaluated connectivity between species habitat patches and calculated community metrics for species diversity between sites. As explained by Watson et al (2011) from this week's readings, site selection for a reserve network should include additional sites which are _complimentary_ to existing sites for maximizing species diversity. This problem is generally formulated in one of two ways:
+
+1. **Minimum set problem**. Given a set of sites with various species compositions and costs for selection, what is the minimum set of sites that represents all species at the lowest cost?
+
+1. **Maximal coverage problem**. Given a budget limit to total cost of sites selected, what is the maximum coverage of species representation possible?
+
+In practice, these _conservation features_ of interest may be "fine filter" targets such as individual species, or "coarse filter" targets such as a general habitat (ie land cover class, or other environmental proxy).
+
+Marxan uses the following input files [rows X columns] which you can find in the provided `scenario_01/input` folder:
+
+- `spp.csv`: conservation features listed by id, $target$ amount and species penalty factor ($spf$) if target amount is unmet [species X properties]
+
+- `pu.csv`: planning unit by id and $cost$ for selecting in reserve network. Optional columns are: status (0=available; 1=included in initial reserve; 2=locked in; 3=excluded); xloc and yloc used by optional sepdistance in spp.csv. [planning units X properties]
+
+- `pu_vs_spp.csv`: $amount$ of species per planning unit [species * planning units X amount]
+
+- `boundary.csv` $[$ optional $]$: shared $boundary$ length between planning units which gets dissolved as a function of the boundary length modifier ($BLM$) when used as an additional cost [planning units * planning units X boundary]
+
+Marxan uses an objective function to minimize the value ($V$) of selecting sites, ie _planning units_, with minimal cost along with minimal penalty ($spf$) of excluding conservation feature targets:
+
+$$
+V = \sum_{pu_+} cost + \sum_{spp_-} spf + [BLM \sum_{pu_+} boundary]
+$$
+
+where:
+
+- $pu_+$ are all the planning units in selected reserve network
+
+- $spp_-$ are all the conservation features whose target amount is not met by selected reserve network
+
+Optionally, clumping of sites can be encouraged by penalizing more boundary length with the boundary length modifier ($BLM$). Boundaries that are shared between sites get dropped. 
+
+# Set Environment {-}
+
+Set your working directory in the R chunk below.
+
+```{r set_env, eval=T, echo=F}
+# set working directory
+wd = 'H:/esm215/lab9_planning'
+# wd = '/Users/bbest/github/landscape-ecology/wk09_planning/lab9_planning'
+setwd(wd)
+
+# ensure latest packages
+if (installed.packages()['dplyr','Version'] < '0.4.1'){
+  install.packages('dplyr')
+}
+
+# load libraries
+suppressPackageStartupMessages(suppressWarnings({
+  library(stringr)
+  library(sp)
+  library(rgdal)
+  library(raster)
+  library(dplyr)
+  library(tidyr)  
+  library(knitr)
+}))
+
+jet_colors = colorRampPalette(
+  c("#00007F", "blue", "#007FFF", "cyan",
+    "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000")) # (256)
+```
+
+# Planning Units and Species {-}
+
+For conservation features, you'll use Maxent species distribution models from the 20 species selected by students in lab 6 (see `data/lab6_species.csv`). For planning units, you'll use hexagons roughly equivalent to pixels 4 x 4 km (edge = 2.3 km * 6 = 13.9 km; area = 13.9 km$^2$). The hexagon planning units are much bigger than the original Maxent outputs (0.5 minute), and also constrained to Santa Barbara County which is a tighter extent than the Maxent bounding box. The Maxent outputs were converted to binary based on a 20% threshold as with lab 6 and the proportion of presence pixels (versus not) assigned to the $amount$ of species present in the pixel in the `pu_vs_spp.csv` file.  To see how these data were prepared, you can look at `lab9_prep.R` which generated the `data/pu.shp` and `scenario_01/input` files for you.
+
+Let's look at our planning units (pu):
+
+```{r plot_pu-id, eval=T, echo=F}
+shp_pu   = 'data/pu'
+pu = readOGR(dirname(shp_pu), basename(shp_pu), verbose=F) 
+spplot(pu['id'], col.regions=jet_colors(length(pu)), 
+       main='pu (planning unit) id')
+```
+
+And our total species amounts per planning unit:
+
+```{r plot_spp-amounts, eval=T, echo=F, results='asis'}
+# read data
+pu_vs_spp = read.csv('scenario_01/input/pu_vs_spp.csv')
+
+# add each species amount to attribute table of planning units (pu) polygons
+id_spp =  pu_vs_spp %>%
+  mutate(sp = sprintf('sp_%02d', species)) %>%
+  select(id=pu, sp, amount) %>%
+  spread(sp, amount)
+pu_spp = sp::merge(pu, id_spp, by='id')
+
+# sum all species amounts (all columns, except first id column) per planning unit
+pu_spp@data$spp_amount = rowSums(pu_spp@data[,2:ncol(pu_spp@data)], na.rm=T)
+
+# plot 
+spplot(pu_spp['spp_amount'], col.regions=jet_colors(255), 
+       main='spp amount: sum')
+```
+
+And table of species by sorted in descending order by sum of total amount:
+
+```{r table_spp-amount, eval=T, echo=F, results='asis'}
+# read data
+spp = read.csv('scenario_01/input/spp.csv')
+
+# summarize amount of each spp
+tbl_spp_amounts = pu_vs_spp %>%
+  group_by(species) %>%
+  summarize(
+    amount_sum = sum(amount)) %>%
+  merge(spp, by.x='species', by.y='id') %>%
+  select(species_id=species, name, amount_sum) %>%  # target, spf
+  arrange(desc(amount_sum))
+
+# print table
+kable(tbl_spp_amounts)
+```
+
+Notice that some species still have relatively low abundance. Let's plot a few different species amounts to see the spatial differences...
+
+```{r plot_species-examples, eval=T, echo=F}
+spp_to_plot = c(8, 20, 1, 9, 3)
+
+for (i in spp_to_plot){ # i=3
+  sp_i = sprintf('sp_%02d', i)
+  sp_n = subset(spp, id==i, name, drop=T)
+  print(spplot(
+    pu_spp[sp_i], col.regions=jet_colors(255), 
+    main=sprintf('spp amount: %s [%d]', sp_n, i)))
+}
+```
+
+# Run Marxan [scenario_01]
+
+For your first Marxan scenario `scenario_01`, the input files have been created for you. Notice that the input paramaters (including paths to input files) are described in the `input.dat` text file can be edited in a GUI by double-clicking on `Inedit.exe`.
+
+![](figures/Inedit_exe.png)
+
+For quick tips on any of these parameters hover your cursor over the parameter. For thorough details, check out the manual and handbook in the `references` folder.
+
+For this scenario, you shouldn't change any of the paramaters or input files. You just need to double-click the `marxan.exe` executable inside the `scenario_01` folder to run Marxan. You should see a black command window open and show log output of Marxan for each run.
+
+![](figures/marxan_exe.png)
+
+Once it's finished, you can press return to exit.
+
+Look at the output files generated by running Marxan, with dimensions [rows X columns] given for csv files:
+
+- `DebugTraceFile_MarOpt.txt`: log output for debugging any errors
+- `MarOptTotalAreas.csv`: initial total values for occurrence and amount of species across planning units
+- `output/`
+    - `out_best.txt` (csv): best run solution (0=excluded; 1=included) [planning units X solution] 
+    - `out_log.dat`: log output also to command window
+    - `out_mvbest.txt` (csv): summary of conservation feature amounts met by the best solution [species X properties]
+    - `out_sen.dat`: scenario details
+    - `out_ssoln.txt` (csv): sum of all run solutions, planning units by number (0 to # of runs) [planning units X number]
+    - `out_sum.txt` (csv): summary of each run [runs X properties]
+  
+Knit this document again to consume the Marxan outputs and plot a figure of the best solution (best) and sum of all solutions (ssoln), which for any planning unit has the maximum value of the number of runs. If a planning unit is at the max possible value of runs, then it may be considered "irreplacable" whereas the other planning units with lower values can be more flexibly swapped out to acheive a similar result.
+
+```{r plot_scenario_01, eval=T, echo=F}
+plot_marxan = function(pu, pfx, type){
+  txt_best  = sprintf('%s_best.txt', pfx)
+  txt_ssoln = sprintf('%s_ssoln.txt', pfx)
+  scenario  = dirname(dirname(pfx))
+  
+  if (!file.exists(txt_best)){
+    return(sprintf('Marxan output file not found: %s', txt_best))
+  }
+  
+  # plot best solution
+  d = read.csv(txt_best) %>%
+    select(
+      id = planning_unit,
+      best = solution) %>%
+    filter(best==1)
+  print(spplot(
+    sp::merge(pu, d, by='id')['best'], 
+    col.regions='red',
+    main=sprintf('%s best', scenario)))    
+
+  # plot summed solution
+  d = read.csv(txt_ssoln) %>%
+    select(
+      id = planning_unit,
+      ssoln = number)
+  d$ssoln = factor(d$ssoln, levels=1:max(d$ssoln))
+  print(spplot(
+      sp::merge(pu, d, by='id')['ssoln'], 
+      col.regions=jet_colors(length(levels(d$ssoln))),
+      main=sprintf('%s ssoln', scenario)))
+}
+
+plot_marxan(pu, 'scenario_01/output/out')
+```
+
+**Question**: How many of the conservation features have their target amount met by the best solution?
+
+# Explore tradeoff between planning unit cost and conservation feature penalty  [scenario_02]
+
+Make a copy of scenario_01 and rename to `scenario_02`. I recommend deleting the files inside the `output` subfolder when you do this so you don't get confused as to whether you ran Marxan yet or not for this scenario.
+
+For this scenario, let's explore the tradeoff between cost of planning units and penalty of not meeting conservation features. Based on the objective function (above equation), you would expect that if the cost of planning units was sufficiently high relative to the penalty of conservation features, you would get a best solution that would not meet all conservation feature targets, effectively switching the problem from a _minimum set_ to _maximum coverage_ problem.
+
+Try this in by either increasing the cost of all planning units (pu.csv:cost = 1) or reducing the penalty of all conservation features (spp.csv:spf = 10) until you get an unmet conservation feature in the best solution, which you can quickly tell by any of the following methods:
+
+1. in command window, scroll up to run of best solution, value to right of `Missing` > 0? (quickest)
+
+1. in output\out_mvbest.txt:"Target Met" column has a No?
+
+1. in output\out_sum.txt:"Missing_Values" column for run of best solution > 0?
+
+Until you get an unmet conservation feature target, sequence by orders of magnitude (ie cost 1 to 10 to 100..., or spf 10 to 1 to 0.1...). (I recommend doing this by double-clicking the file to open in Excel, updating the first value and using the [lower-right of cell crosshair double-click trick](https://www.ablebits.com/office-addins-blog/2014/05/30/howto-use-autofill-excel/#double-click) to automatically fill down. Save the file to update CSV and disregard Excel's suggestion to save in native format when closing.)
+
+Knit again to plot the result below.
+
+```{r plot_scenario_02, eval=T, echo=F}
+plot_marxan(pu, 'scenario_02/output/out')
+```
+
+**Question**: At what combination of values for planning unit cost vs. conservation feature penalty did you get an unmet conservation feature in the selected set?
+
+**Question**: Were more or fewer sites selected in the best solution than in scenario_01? Was there more or less flexibility in selection of sites between scenarios as evidenced in sum of solutions? Does this make sense to you based on the objective function?
+
+# Explore use of boundary length modifier (BLM)  [scenario_03, scenario_04, scenario_05]
+
+Make a copies of scenario_01 and rename to `scenario_03`, `scenario_04`, `scenario_05`. I recommend deleting the files inside the `output` subfolder when you do this so you don't get confused as to whether you ran Marxan yet or not for this scenario.
+
+For these scenarios, you'll investigate the use of the boundary length modifier to clump selected planning units. Use the `Inedit.exe` to enter alternative values of BLM. Try 0.1, 1 and 10 for scenarios 3, 4 and 5 respectively.
+
+```{r plot_scenario_03, eval=T, echo=F}
+plot_marxan(pu, 'scenario_03/output/out')
+plot_marxan(pu, 'scenario_04/output/out')
+plot_marxan(pu, 'scenario_05/output/out')
+```
+
+**Question**: How many components (contiguous clusters of sites) are in each of your best solutions as a function of BLM?
+
+# Vary planning unit cost by landcover [scenario_06]
+
+For the next two scenarios, you'll use the national landcover dataset (NLCD 2011) to impose higher planning unit cost on developed areas and add "coarse filter" habitats as additional conservation features.
+
+The new spatially heterogenous planning unit cost values were extracted from the NLCD reclassifed by the values in `data/nlcd_cost.csv`.
+
+```{r table_nlcd_cost, eval=T, echo=F, results='asis'}
+setwd(wd)
+
+# check that all new CSVs have been extracted to data
+new_csvs = c(
+  'nlcd_cost.csv','pu_cost.csv',
+  'nlcd_habitats.csv','pu_vs_spp_habitats.csv','spp_habitats.csv')
+new_exists = file.exists(sprintf('data/%s', new_csvs))
+if (any(!new_exists)){
+  stop("You still need to extract data_files.zip (on GauchoSpace) directly into lab9_planning/data.\n  Missing files there: ", paste(new_csvs[!new_exists], collapse=', '))  
+}
+
+read.csv('data/nlcd_cost.csv') %>%
+  kable
+```
+
+In the following three plots, you see:
+
+1. the original landcover NLCD 2011 raster with the empty planning unit hexagons on top
+
+1. the NLCD reclassified to cost using the table above, again with empty planning unit hexagons on top
+
+1. the cost per hexagonal planning unit, which is the extracted average cost of pixels inside
+
+```{r extract_nlcd-to-pu_cost-habitats, eval=T, echo=F}
+setwd(wd)
+
+# read NLCD raster
+r_nlcd = raster('data/nlcd_2011.tif') # plot(r_nlcd)
+
+# read cost table for converting landcover
+d_cost = read.csv('data/nlcd_cost.csv', na.strings='') %>%
+  select(code, pu_cost) %>%
+  as.matrix
+
+# read habitat table for converting landcover
+d_hab  = read.csv('data/nlcd_habitats.csv', na.strings='')
+
+# spp_hab
+spp_hab = d_hab %>%
+  filter(!is.na(id)) %>%
+  group_by(id, target, spf, name) %>%
+  summarize() %>%
+  data.frame()
+
+# time consuming to extract, so prepared already
+redo = F
+if (redo){  
+  
+  # function to extract mean raster value for planning units
+  r_to_pu = function(r, pu, fld){
+    pu@data[fld] = unlist(lapply(
+      raster::extract(r, pu), 
+      function(x){
+        if (!is.null(x)){
+          x[is.na(x)] = 0
+          mean(x)
+        } else {
+          NA
+        }}))
+    return(pu)
+  }
+
+  # get cost value per planning unit
+  pu = r_to_pu(r_cost, pu, 'cost') # SLOW
+  write.csv(pu@data[,c('id','cost')], 'data/pu_cost.csv', row.names=F)
+    
+  # extract habitats to pu
+  for (hab in spp_hab$name){ # hab=unique(na.omit(d_hab$name))[1]
+    id = unique(subset(d_hab, name==hab, id, drop=T))
+    r_hab = r_nlcd %in% subset(d_hab, name==hab, code, drop=T)  
+    pu = r_to_pu(r_hab, pu, hab) # SLOW
+  }
+            
+  # spp_habitats.csv 
+  rbind(
+    read.csv('scenario_01/input/spp.csv'),
+    spp_hab) %>%
+  write.csv('data/spp_habitats.csv', row.names=F)
+  
+  # pu_vs_spp_habitats.csv: species, pu, amount
+  hab2id = setNames(spp_hab$id, spp_hab$name)
+  rbind(
+    read.csv('scenario_01/input/pu_vs_spp.csv'),
+    pu@data[,c('id', habitats)] %>%
+      gather(habitat, amount, -id) %>%
+      mutate(species = hab2id[habitat]) %>%
+      filter(amount!=0) %>% # Marxan expects to not see rows with 0 amount
+      select(species, pu=id, amount) %>%
+      arrange(species, pu)) %>%
+    write.csv('data/pu_vs_spp_habitats.csv', row.names=F)
+  
+} # end redo
+```
+
+```{r plot_cost, eval=T, echo=F}
+# plot NLCD with pu's
+plot(r_nlcd)
+mtext('landcover, NLCD 2011', line=-1)
+plot(pu, add=T)
+
+# reclassify nlcd to cost
+r_cost = reclassify(r_nlcd, d_cost)
+
+# plot cost as raster
+plot(r_cost, alpha=0.9, col=jet_colors(255))
+mtext('cost, NLCD resolution', line=-1)
+plot(pu, add=T, border='gray')
+
+# plot cost as hexagon pu
+pu_cost = sp::merge(pu, read.csv('data/pu_cost.csv'), by='id')
+spplot(pu_cost['cost'], col.regions=jet_colors(255), main='cost, per pu')
+```
+
+Here's a summary of the planning unit cost values:
+```{r table_cost, eval=T, echo=F, results='asis'}
+read.csv('data/pu_cost.csv') %>%
+  select(cost) %>%
+  summarize(
+    min  = min(cost, na.rm=T),
+    mean = mean(cost, na.rm=T),
+    max  = max(cost, na.rm=T),
+    sum  = sum(cost, na.rm=T),
+    n    = length(na.omit(cost))) %>%
+  kable
+```
+
+These new planning unit cost values have been saved to `data/pu_cost.csv`. Use this alternative planning unit file as input to a new copy of scenario_01 as `scenario_06`. You can either replace `scenario_06/input/pu.csv` with `data/pu_cost.csv` or copy it there and update the marxan input parameters (stored in `input.dat`) by using the `Inedit.exe` program inside `scenario_06` and updating the path to `pu_cost.csv`. After you run Marxan, knit this lab again to consume this scenario's outputs and render the best and sum of solutions below.
+
+```{r plot_scenario_06, eval=T, echo=F}
+plot_marxan(pu, 'scenario_06/output/out')
+```
+
+**Question**: Based on this new spatially varying cost of planning unit, how do you expect the scenario_06 results to differ from scenario_01 and do you see any evidence of this in the output?
+
+# Add coarse habitats as conservation features [scenario_07]
+
+Next we'll use landcover data to describe desirable habitats for input as additional conservation features. We need to use another lookup table to reclassify the landcover data into these new habitat id's.
+
+```{r table_nlcd_habitat, eval=T, echo=F, results='asis'}
+read.csv('data/nlcd_habitats.csv') %>%
+  filter(!is.na(id)) %>%
+  select(code, nlcd_class, id, name) %>%
+  kable
+```
+
+```{r plot_habitats, eval=T, echo=F}
+# transpose pu_vs_spp [pu * spp X amount] to [pu X spp] for just habitats
+d_hab_pu = read.csv('data/pu_vs_spp_habitats.csv') %>% 
+  filter(species %in% unique(na.omit(d_hab$id))) %>%
+  mutate(
+    spp_name = setNames(
+        as.character(spp_hab$name), 
+        as.character(spp_hab$id))[as.character(species)]) %>%
+  select(id=pu, spp_name, amount) %>%
+  spread(spp_name, amount)
+
+# get habitats by planning unit
+pu_hab = sp::merge(pu, d_hab_pu, by='id')
+
+# plot habitats
+for (hab in as.character(spp_hab$name)){ 
+  # hab=as.character(spp_hab$name)[1]  
+  id = unique(subset(d_hab, name==hab, id, drop=T))
+  r_hab = r_nlcd %in% subset(d_hab, name==hab, code, drop=T)
+
+  # plot habitat as raster
+  plot(r_hab, legend=F, main=sprintf('nlcd %s [%d]', hab, id))
+  plot(pu, add=T)
+
+  # plot habitat as raster
+  print(
+    spplot(pu_hab[hab], col.regions=jet_colors(255), 
+         main=sprintf('pu habitat: %s [%d]', hab, id)))
+}
+```
+
+Here's a summary of proportion of habitat across planning units:
+
+```{r table_habitats, eval=T, echo=F, results='asis'}
+d_hab_pu %>%  
+  gather(habitat, amount, -id) %>%
+  group_by(habitat) %>%
+  summarize(
+    n    = length(na.omit(amount)),
+    min  = min(amount, na.rm=T),
+    mean = mean(amount, na.rm=T),
+    max  = max(amount, na.rm=T),
+    sum  = sum(amount, na.rm=T)) %>%
+  kable
+```
+
+Besides the habitat amounts extracted per planning unit (ie `pu_vs_spp.csv`), we need to append these habitats into the conservation features file (ie `spp.csv`) with explicit target amounts and species penalty factors (spf) for Marxan to use in its analysis:
+
+```{r table_spp_habitats, eval=T, echo=F, results='asis'}
+read.csv('data/spp_habitats.csv') %>%
+  filter(id > 20) %>%
+  kable
+```
+
+These new habitat values have been combined with the existing conservation targets and saved to `spp_habitats.csv` (in format of `spp.csv`) and `pu_vs_spp_habitats.csv` (in format of `pu_vs_spp.csv`). Use these alternative input files to run a new scenario_07 based on a copy of scenario_06 (similar to steps for setting up previous scenario). Run Marxan and knit again to consume the output and render the scenario output plots below.
+
+```{r plot_scenario_07, eval=T, echo=F}
+plot_marxan(pu, 'scenario_07/output/out')
+```
+
+**Question**: Based on these additional conservation features, how do you expect the scenario_07 results to differ from scenario_06 and do you see any evidence of this in the output?
+
+# Assignment {-}
+
+Answer the questions above and be sure to include all your scenario_# best and ssoln output figures in your writeup.
+
+# Further Resources {-}
+
+Besides the manual and handbook in the `references` folder, I recommend checking out this [Marxan Tutorial](http://www.uq.edu.au/marxan/tutorial/toc.html) organized into modules on: conservation principles, theory behind Marxan, Marxan information requirements, technical introduction, output, introduction to Zonae Cogito, and parameter setting.

@@ -1,0 +1,156 @@
+---
+title: "Lab 3. Agents: Physical Controls on Vegetation"
+author: "Ben Best"
+date: "January 22, 2015"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+Due: noon Wed, Jan 28 2015 via GauchoSpace
+
+# Introduction
+
+In this lab, you'll explore physical and climatic agents that determine vegetation types. In lab 1, you qualitatively assessed that the evergreen land cover type associated with steep, northern exposures tend to recieve less sun and are therefore moister and cooler. Now we'll quantiatively determine these physical-biotic associations using a more detailed land cover on vegetation available through USGS for the Santa Ynez area of Santa Barbara County with additional data layers prepared by Frank Davis per Davis & Dozier (1990). We'll determine these associations by fitting a recursive partitioning model.
+
+# Opening
+
+# Start
+
+To get started:
+
+1. Download *lab3_agents.7z** from GauchoSpace into your course home directory (eg `H:\esm215`). Right-click on the file -> 7-Zip -> Extract Here. Navigate into the newly expanded `lab3_agents` folder and double-click on the ArcMap document `lab3.mxd`.
+
+1. Download *lab3.Rmd** from GauchoSpace into the lab directory (ie `H:\esm215\lab3_agents`). Right-click on it -> Open with -> RStudio. Replace the working directory with your own (be sure to replace slashes.).
+
+# Data
+
+**geol**  A subregion of <span style="mso-spacerun:yes">the 1:250,000
+scale geologic map of CA. 30 m raster. Legend is available at http://ngmdb.usgs.gov/ngm-bin/ILView.pl?sid=329_1.sid&vtype=b
+
+**soil ** A subregion of the ****1:24,000
+scale soil survey map (SSURGO, http://soils.usda.gov/survey/geography/ssurgo/description.html.
+30 m raster data. SSURGO maps are the most detailed soil survey maps available
+for most of the
+<st1:country-region w:st="on"><st1:place w:st="on">U.S.</st1:place></st1:country-region>
+and are used extensively for landscape-scale analysis.
+
+**elev** -
+28m raster: Shuttle imaging radar topographic data. Values are elevations in
+meters above sea level.
+
+**slope******- 28 m raster: slope angle in degrees derived from synezdem
+
+**flow** 28 m raster: flow accumulation model, derived from synezdem for a subregion
+corresponding to subsoil30. Pixel values are the drainage area for each pixel.
+(The data are noisy because errors in the dem
+propagate to disrupt drainage topology.)
+
+**sunw** **-** 28
+m the data raster**:** integrated clearsky
+shortwave radiation, units are watts/sq. m., for December-Feb.
+
+**suns** **-** 28
+m the data raster**:** annual ****clearsky
+shortwave radiation, units are watts/sq. m.
+
+**lc**&nbsp;&nbsp; - 30 m raster: 2010 vegetation/land cover
+map produced from thematic mapper satellite imagery.
+Actual vegetation mapped by USFS/TNC to Alliances (dominant overstory species
+or community types) according to NatureServe/US
+vegetation standard based on Thematic mapper imagery and elevation data.
+
+In lab spend some time learning to display the data. Overlay individual
+layers and combinations on the air photo. Zoom in and out. Play with the symbology.
+
+In particular, examine apparent<span style="mso-spacerun:yes"> land cover pattern (air photo)<span style="mso-spacerun:yes"> and vegetation pattern (SBColfireveg)
+in relationship to geology, soils, fire history and topographic factors like
+elevation, slope, radiation and flow accumulation.
+
+## Quantitative analysis of an environmental database: Hierarchical environmental filters (or not).
+
+What controls vegetation pattern in the Santa Ynez
+Hills and Valley subsection? Landscape theory posits that pattern could vary
+from one landscape to another and reflect local physical controls, disturbance
+history and plant dispersal processes.
+
+Various techniques exist to quantify the relationship between vegetation
+pattern and environmental factors at different scales. Here you will learn a
+method known as mutual information analysis. Basically, you will measure the
+statistical association between vegetation types and each of a set of
+environmental variables.
+
+
+```{r read data}
+
+# load necessary libraries having useful functions, suppressing startup messages and warnings
+suppressPackageStartupMessages(suppressWarnings({
+  library(foreign) # read.dbf
+  library(raster)  # read rasters
+  library(rpart)   # recursive partitioning
+  library(party)   # recursive partytioning
+  library(partykit)
+  }))
+
+# set your working directory
+setwd('H:/esm215/lab3_agents')
+ 
+# get lookup table matching hierarchical vegetative landcovers
+lu = read.dbf('natgaplandcov_table.dbf')
+
+# get stack of rasters
+r = stack(
+  raster('rasters/lc.img'),
+  raster('rasters/elev.tif'),
+  raster('rasters/slope.tif'),
+  raster('rasters/aspect.tif'),
+  raster('rasters/suns.tif'),
+  raster('rasters/sunw.tif'),
+  raster('rasters/flow.tif'),
+  raster('rasters/geol.tif'))
+
+# extract raster values into data frame
+D = as.data.frame(getValues(r))
+D$lc   = factor(D$lc)
+D$geol = factor(D$geol)
+
+# add id
+D = cbind(id=1:nrow(D), D)
+
+# merge D with lookup table for landcovers
+D = merge(D, lu, by.x='lc', by.y='VALUE', all.x=T)
+
+# look at just the NLDC high level landcover for Forest & Woodland
+nldc = 'Forest & Woodland'
+table(subset(D, NVC_CLASS == nldc, lc))
+
+# fit model for recursive partitioning
+mdl = rpart(lc ~ elev + slope + aspect + suns + sunw + flow, 
+            method='class', 
+            data=subset(D, NVC_CLASS == nldc))
+
+# examine fitted model
+print(mdl)
+summary(mdl)
+
+# plot the model using the pretty partytioning class
+mdl_p = as.party(mdl)
+print(mdl_p)
+plot(mdl_p)
+
+# predict landcover classes
+D_nldc = subset(D, D$NVC_CLASS == nldc)
+D_nldc$lc_pred = predict(mdl, D_nldc, type='vector')
+D_nldc$lc_pred = levels(D_nldc$lc)[D_nldc$lc_pred]
+
+# examine matches
+table(D_nldc[,c('lc','lc_pred')])
+
+# turn into raster
+D_nldc$lc_pred = as.integer(as.character(D_nldc$lc_pred))
+#D = merge(D, D_nldc[,c('id','lc_pred')], by.x='id', by.y='id', all.x=T)
+#...
+```
+
+## ... To Be Continued
