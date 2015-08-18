@@ -1,0 +1,21 @@
+---
+bibliography: ../bibliography.bib
+csl: ../csl/apa-no-doi-no-issue.csl
+output: md_document
+---
+
+# Week 2 (Jan 11 - 17): Patterns & Processes
+
+Pattern and Process in Ecological Systems: Ecological space-time hierarchies, spatial ecological interactions across landscapes and regions
+
+## Exercise
+
+- [ex02](./ex02.md): Physical environmental controls on landscape pattern
+
+## Readings
+
+pdfs:
+
+- [Delcourt_1988.pdf](https://github.com/bbest/landscape-ecology/raw/master/readings/Delcourt_1988.pdf) [@delcourt_quaternary_1988]
+- [Pielke_1990.pdf](https://github.com/bbest/landscape-ecology/raw/master/readings/Pielke_1990.pdf) [@pielke_influence_1990]  
+- [Reiners_2001.pdf](https://github.com/bbest/landscape-ecology/raw/master/readings/Reiners_2001.pdf) [@reiners_propagation_2001]

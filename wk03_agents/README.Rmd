@@ -1,0 +1,23 @@
+---
+bibliography: ../bibliography.bib
+csl: ../csl/apa-no-doi-no-issue.csl
+output: md_document
+---
+
+# Week 3 (Jan 18 - 24): Disturbance Regimes
+
+Disturbance regimes: disturbance processes, dynamic disturbance mosaics, describing and modeling disturbance regimes at the landscape scale.
+
+
+## Exercise
+
+[ex03](./ex03.md): Describing and modeling fire regimes in fire-prone landscapes
+
+
+## Readings
+
+pdfs:
+
+- [Perry_2008.pdf](https://github.com/bbest/landscape-ecology/raw/master/readings/Perry_2008.pdf) [@perry_spatial_2008]
+- [White_2006.pdf](https://github.com/bbest/landscape-ecology/raw/master/readings/White_2006.pdf) [@white_disturbance_2006]
+

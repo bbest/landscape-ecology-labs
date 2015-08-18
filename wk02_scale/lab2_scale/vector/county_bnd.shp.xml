@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+	<idinfo>
+		<citation>
+			<citeinfo>
+				<origin>Santa Barbara County, Public Works Department, Surveyor Division</origin>
+				<pubdate>5/19/2010</pubdate>
+				<pubtime>4:23 pm</pubtime>
+				<title Sync="TRUE">SBCSDE.GIO.county_boundary</title>
+				<geoform Sync="TRUE">vector digital data</geoform>
+				<pubinfo></pubinfo>
+				<onlink>http://www.countyofsb.org/pwd/pwsurveyor.aspx?id=3146</onlink>
+				<ftname Sync="TRUE">SBCSDE.GIO.county_boundary</ftname></citeinfo>
+		</citation>
+		<descript>
+			<abstract>Santa Barbara County Boundary</abstract>
+			<langdata Sync="TRUE">en</langdata><purpose>To graphically depict the boundaries of the County of Santa Barbara.</purpose><supplinf>See California Government Code §23142</supplinf></descript>
+		<timeperd>
+			<timeinfo>
+				<sngdate><caldate>5/19/2010</caldate><time>4:24 pm</time></sngdate></timeinfo>
+			<current>publication date</current>
+		</timeperd>
+		<status>
+			<progress>Complete</progress>
+			<update>None planned</update>
+		</status>
+		<spdom>
+			<bounding>
+				<westbc Sync="TRUE">-120.678021</westbc>
+				<eastbc Sync="TRUE">-119.435023</eastbc>
+				<northbc Sync="TRUE">35.123559</northbc>
+				<southbc Sync="TRUE">34.352873</southbc>
+			</bounding>
+			<lboundng><leftbc Sync="TRUE">5760742.565996</leftbc><rightbc Sync="TRUE">6128664.282907</rightbc><bottombc Sync="TRUE">1961373.193015</bottombc><topbc Sync="TRUE">2234398.805099</topbc></lboundng></spdom>
+		<keywords>
+			<theme>
+				<themekt>USGS Thesaurus</themekt>
+				<themekey>Land Surveying</themekey>
+			</theme>
+			<place>
+				<placekt>Getty Thesaurus of Geographic Names</placekt>
+				<placekey>Santa Barbara County</placekey>
+			</place>
+		</keywords>
+		<accconst>It is public information and is available upon request.</accconst>
+		<useconst>While every effort has been made to ensure that this data is complete and reliable, the Office of the County Surveyor does not assume liability for any damages caused by any errors or omissions in the data, nor as a result of improper use of the dataset.  The dataset is not intended to obtain coordinate values, distances or bearings.</useconst>
+		<ptcontac>
+			<cntinfo>
+				<cntorgp>
+					<cntorg>Santa Barbara County, Public Works Department - Surveyor Division</cntorg>
+					<cntper>Adrian Foster</cntper>
+				</cntorgp>
+				<cntpos>GIS Technician</cntpos>
+				<cntaddr>
+					<addrtype>mailing address</addrtype>
+					<address>123 East Anapamu Street Stop 1</address>
+					<city>Santa Barbara</city>
+					<state>CA</state>
+					<postal>93101-2097</postal>
+					<country>USA</country>
+				</cntaddr>
+				<cntvoice>805-568-3020</cntvoice>
+				<cntfax>805-568-3318</cntfax>
+				<hours>8-12 PST</hours>
+				<cntinst>Ask for GIS</cntinst>
+			</cntinfo>
+		</ptcontac>
+		<browse>
+		</browse>
+		<datacred>Santa Barbara County, Public Works Department, Surveyor Division</datacred>
+		<secinfo>
+			<secclass>Unclassified</secclass>
+		</secinfo>
+		<native Sync="TRUE">Microsoft Windows XP Version 5.1 (Build 2600) Service Pack 3; ESRI ArcCatalog 9.2.6.1500</native>
+		<natvform Sync="TRUE">SDE Feature Class</natvform></idinfo>
+	<dataqual>
+		<posacc>
+			<horizpa>
+				<horizpar>
+The dataset is registered to the County Assessor's Cadastral Parcel Landbase dataset. The County assessor's cadastral Parcel Landbase dataset has no established level of accuracy and is based on printed Assessor's Map Books. 
+Due to the nature of its construction the County Assessor's Cadastral Parcel Landbase dataset has varying degrees of positional precision. It is useful to distinguish between positional accuracy and positional precision. In the Assessor's Cadastral Parcel Landbase feature class, the former refers to the relative accuracy of a given group of spatially related parcel polygons. In other words, for any given polygon, are the neighboring polygons in a proper or accurate relationship spatially with our subject polygon? Subjectively we find that the Assessor's Cadastral Parcel Landbase feature class positional accuracy is good to excellent. On the other hand, positional precision refers to an actual ground location and how well any determinable cadastral point in the dataset is related to this established ground location. As stated previously, this will vary depending on its general location. In those areas which were initially spatially referenced to the Flood Control Topo Map Sets, which are the areas of Santa Barbara city, the Goleta valley, the Santa Ynez valley, and the Santa Maria valley, there is consistently a positional horizontal error of between 3 and 6 feet. The lower figure would be within the city blocks themselves, and the higher figure in the areas outside the numbered orthogonal blocks. Outside of this control set, the nature of the precision may be quite varied. In the unpopulated areas outside the control of the Knopf GPS road set, there may be variances of more than 100-200 feet. For the majority of the populated areas, any horizontal positional precision would be between these general values, and more closer to the lower side given a reasonable distance and tie-in to the Knopf GPS road set. Ultimately it must be remembered that for many of the more antique legal descriptions that might reference, say, a rancho line, that a precise location of any given cadastral point is by its nature an abstraction unless referenced by a modern record of survey, and even then there may be serious discrepancies in the various surveys that are available. The southern Tepusquet Rd area is a prime example, where it would take a survey and the signed acquiescence of all of the affected property owners to truly call that area spatially precise in cadastral terms.
+"Notice: Assessor Parcels are for tax assessment purposes only..." In general, Rancho areas with less monuments and fewer records of measured distances are less accurate, whereas urban areas with a higher density of recorded monuments and therefore more repeated distance measurements are more accurate.
+</horizpar>
+				<qhorizpa>
+					<horizpav>+/- 1 to 100 meters</horizpav>
+					<horizpae>
+Survey-collected GPS coordinate data from a small sample of monuments were compared to corresponding vertices in the County Assessorss Cadastral Parcel Landbase (Assessor's Parcel Layer).
+Verifying Survey data was obtained from horizontal positions derived by GPS observations holding Continuously Operating Reference Stations (CORS) or Control Points fixed as shown in Record of Survey Books, based on California Coordinate System 1983 (CCS83) 1991.35 epoch.
+The County Assessor's Cadastral Parcel Landbase dataset (Assessor's Parcel Layer) was obtained from the County Assessor.
+</horizpae>
+				</qhorizpa>
+			</horizpa>
+		</posacc>
+		<lineage>
+			<srcinfo>
+			</srcinfo>
+			<procstep>
+				<procdesc>Metadata imported.</procdesc>
+				<srcused>C:\DOCUME~1\afoster\LOCALS~1\Temp\xmlB2.tmp</srcused>
+			</procstep>
+			<procstep><procdesc Sync="TRUE">Metadata imported.</procdesc><srcused Sync="TRUE">C:\DOCUME~1\afoster\LOCALS~1\Temp\xml4C7.tmp</srcused><date Sync="TRUE">20090921</date><time Sync="TRUE">14171400</time></procstep><procstep><procdesc Sync="TRUE">Metadata imported.</procdesc><srcused Sync="TRUE">G:\SURVEY\SIS\DATA\Regions\bndy_county.shp.xml</srcused><date Sync="TRUE">20100727</date><time Sync="TRUE">18214000</time></procstep></lineage>
+	</dataqual>
+	<spdoinfo>
+		<direct Sync="TRUE">Vector</direct>
+		<ptvctinf><esriterm Name="county_bnd"><efeatyp Sync="TRUE">Simple</efeatyp><efeageom Sync="TRUE">4</efeageom><esritopo Sync="TRUE">FALSE</esritopo><efeacnt Sync="TRUE">0</efeacnt><spindex Sync="TRUE">FALSE</spindex><linrefer Sync="TRUE">FALSE</linrefer></esriterm></ptvctinf></spdoinfo>
+	<spref>
+		<horizsys>
+			<planar>
+				<planci>
+					<plance Sync="TRUE">coordinate pair</plance>
+					<coordrep>
+						<absres Sync="TRUE">0.000328</absres>
+						<ordres Sync="TRUE">0.000328</ordres>
+					</coordrep>
+					<plandu Sync="TRUE">survey feet</plandu>
+				</planci>
+			</planar>
+			<geodetic>
+				<horizdn Sync="TRUE">North American Datum of 1983</horizdn>
+				<ellips Sync="TRUE">Geodetic Reference System 80</ellips>
+				<semiaxis Sync="TRUE">6378137.000000</semiaxis>
+				<denflat Sync="TRUE">298.257222</denflat>
+			</geodetic>
+			<cordsysn><geogcsn Sync="TRUE">GCS_North_American_1983</geogcsn><projcsn Sync="TRUE">NAD_1983_StatePlane_California_V_FIPS_0405_Feet</projcsn></cordsysn></horizsys>
+		<vertdef><altsys><altenc Sync="TRUE">Explicit elevation coordinate included with horizontal coordinates</altenc><altres Sync="TRUE">1.000000</altres></altsys></vertdef></spref>
+	<eainfo>
+		<detailed Name="county_bnd">
+			<attr>
+				<attrlabl>Shape</attrlabl>
+				<attrdef>Feature geometry.</attrdef>
+				<attrdefs>ESRI</attrdefs>
+				<attrdomv>
+					<udom>Coordinates defining the features.</udom>
+				</attrdomv>
+				<attalias Sync="TRUE">Shape</attalias><attrtype Sync="TRUE">Geometry</attrtype><attwidth Sync="TRUE">0</attwidth><atprecis Sync="TRUE">0</atprecis><attscale Sync="TRUE">0</attscale></attr>
+			<attr><attrlabl Sync="TRUE">FID</attrlabl><attalias Sync="TRUE">FID</attalias><attrtype Sync="TRUE">OID</attrtype><attwidth Sync="TRUE">4</attwidth><atprecis Sync="TRUE">0</atprecis><attscale Sync="TRUE">0</attscale><attrdef Sync="TRUE">Internal feature number.</attrdef><attrdefs Sync="TRUE">ESRI</attrdefs><attrdomv><udom Sync="TRUE">Sequential unique whole numbers that are automatically generated.</udom></attrdomv></attr><enttyp>
+				<enttypl Sync="TRUE">county_bnd</enttypl>
+				<enttypt Sync="TRUE">Feature Class</enttypt><enttypc Sync="TRUE">0</enttypc></enttyp>
+			<attr><attrlabl Sync="TRUE">NAME</attrlabl><attalias Sync="TRUE">NAME</attalias><attrtype Sync="TRUE">String</attrtype><attwidth Sync="TRUE">64</attwidth><atprecis Sync="TRUE">0</atprecis><attscale Sync="TRUE">0</attscale></attr><attr><attrlabl Sync="TRUE">area</attrlabl><attalias Sync="TRUE">area</attalias><attrtype Sync="TRUE">Double</attrtype><attwidth Sync="TRUE">19</attwidth><atprecis Sync="TRUE">18</atprecis><attscale Sync="TRUE">8</attscale></attr><attr><attrlabl Sync="TRUE">len</attrlabl><attalias Sync="TRUE">len</attalias><attrtype Sync="TRUE">Double</attrtype><attwidth Sync="TRUE">19</attwidth><atprecis Sync="TRUE">18</atprecis><attscale Sync="TRUE">8</attscale></attr><attr><attrlabl Sync="TRUE">Shape_area</attrlabl><attalias Sync="TRUE">Shape_area</attalias><attrtype Sync="TRUE">Double</attrtype><attwidth Sync="TRUE">19</attwidth><atprecis Sync="TRUE">0</atprecis><attscale Sync="TRUE">0</attscale><attrdef Sync="TRUE">Area of feature in internal units squared.</attrdef><attrdefs Sync="TRUE">ESRI</attrdefs><attrdomv><udom Sync="TRUE">Positive real numbers that are automatically generated.</udom></attrdomv></attr><attr><attrlabl Sync="TRUE">Shape_len</attrlabl><attalias Sync="TRUE">Shape_len</attalias><attrtype Sync="TRUE">Double</attrtype><attwidth Sync="TRUE">19</attwidth><atprecis Sync="TRUE">0</atprecis><attscale Sync="TRUE">0</attscale></attr></detailed>
+	</eainfo>
+	<distinfo>
+		<stdorder>
+			<digform>
+				<digtinfo>
+					<transize>0.121</transize>
+					<dssize Sync="TRUE">0.086</dssize></digtinfo>
+			</digform>
+		</stdorder>
+		<resdesc Sync="TRUE">Downloadable Data</resdesc></distinfo>
+	<metainfo>
+		<metd Sync="TRUE">20100727</metd>
+		<metc>
+			<cntinfo>
+				<cntorgp>
+					<cntorg>Santa Barbara County, Public Works Department - Surveyor Division</cntorg>
+					<cntper>Adrian Foster</cntper>
+				</cntorgp>
+				<cntpos>GIS Technician</cntpos>
+				<cntaddr>
+					<addrtype>mailing address</addrtype>
+					<address>COUNTY SURVEYOR</address>
+					<address>123 E ANAPAMU ST STOP 1</address>
+					<city>Santa Barbara</city>
+					<state>CA</state>
+					<postal>93101-2097</postal>
+					<country>USA</country>
+				</cntaddr>
+				<cntvoice>805-568-3020</cntvoice>
+				<cntfax>805-568-3318</cntfax>
+				<hours>8-12 PST</hours>
+				<cntinst>Ask for GIS</cntinst>
+			</cntinfo>
+		</metc>
+		<metstdn Sync="TRUE">FGDC Content Standards for Digital Geospatial Metadata</metstdn>
+		<metstdv Sync="TRUE">FGDC-STD-001-1998</metstdv>
+		<mettc Sync="TRUE">local time</mettc>
+		<metextns>
+			<onlink>http://www.esri.com/metadata/esriprof80.html</onlink>
+			<metprof>ESRI Metadata Profile</metprof>
+		</metextns>
+		<metextns>
+			<onlink>http://www.esri.com/metadata/esriprof80.html</onlink>
+			<metprof>ESRI Metadata Profile</metprof>
+		</metextns>
+		<langmeta Sync="TRUE">en</langmeta></metainfo>
+	<Esri><CreaDate>20100727</CreaDate><CreaTime>18214000</CreaTime><SyncOnce>FALSE</SyncOnce><SyncDate>20100728</SyncDate><SyncTime>13064300</SyncTime><ModDate>20100728</ModDate><ModTime>13064300</ModTime><MetaID>{014CFCC8-F68F-4728-9224-2E79AA79B8E2}</MetaID><DataProperties><itemProps><itemName Sync="TRUE">county_bnd</itemName><imsContentType Sync="TRUE">002</imsContentType><itemSize Sync="TRUE">0.000</itemSize><itemLocation><linkage Sync="TRUE">file://\\babylon\co2016\bbest_student\esm215\data\cosb\raw\county_bnd</linkage><protocol Sync="TRUE">Local Area Network</protocol></itemLocation></itemProps><coordRef><type Sync="TRUE">Projected</type><geogcsn Sync="TRUE">GCS_North_American_1983</geogcsn><projcsn Sync="TRUE">NAD_1983_StatePlane_California_V_FIPS_0405_Feet</projcsn><peXml Sync="TRUE">&lt;ProjectedCoordinateSystem xsi:type='typens:ProjectedCoordinateSystem' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:typens='http://www.esri.com/schemas/ArcGIS/10.0'&gt;&lt;WKT&gt;PROJCS[&amp;quot;NAD_1983_StatePlane_California_V_FIPS_0405_Feet&amp;quot;,GEOGCS[&amp;quot;GCS_North_American_1983&amp;quot;,DATUM[&amp;quot;D_North_American_1983&amp;quot;,SPHEROID[&amp;quot;GRS_1980&amp;quot;,6378137.0,298.257222101]],PRIMEM[&amp;quot;Greenwich&amp;quot;,0.0],UNIT[&amp;quot;Degree&amp;quot;,0.0174532925199433]],PROJECTION[&amp;quot;Lambert_Conformal_Conic&amp;quot;],PARAMETER[&amp;quot;False_Easting&amp;quot;,6561666.666666666],PARAMETER[&amp;quot;False_Northing&amp;quot;,1640416.666666667],PARAMETER[&amp;quot;Central_Meridian&amp;quot;,-118.0],PARAMETER[&amp;quot;Standard_Parallel_1&amp;quot;,34.03333333333333],PARAMETER[&amp;quot;Standard_Parallel_2&amp;quot;,35.46666666666667],PARAMETER[&amp;quot;Latitude_Of_Origin&amp;quot;,33.5],UNIT[&amp;quot;Foot_US&amp;quot;,0.3048006096012192],AUTHORITY[&amp;quot;EPSG&amp;quot;,2229]]&lt;/WKT&gt;&lt;XOrigin&gt;-117608900&lt;/XOrigin&gt;&lt;YOrigin&gt;-91881400&lt;/YOrigin&gt;&lt;XYScale&gt;36269466.692146368&lt;/XYScale&gt;&lt;ZOrigin&gt;-100000&lt;/ZOrigin&gt;&lt;ZScale&gt;10000&lt;/ZScale&gt;&lt;MOrigin&gt;-100000&lt;/MOrigin&gt;&lt;MScale&gt;10000&lt;/MScale&gt;&lt;XYTolerance&gt;0.0032808333333333335&lt;/XYTolerance&gt;&lt;ZTolerance&gt;0.001&lt;/ZTolerance&gt;&lt;MTolerance&gt;0.001&lt;/MTolerance&gt;&lt;HighPrecision&gt;true&lt;/HighPrecision&gt;&lt;WKID&gt;2229&lt;/WKID&gt;&lt;/ProjectedCoordinateSystem&gt;</peXml></coordRef><lineage><Process ToolSource="C:\Program Files\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\Conversion Tools.tbx\FeatureClassToFeatureClass" Date="20100728" Time="130643">FeatureClassToFeatureClass "Database Connections\Connection to SBGISSQL VIEWER.sde\SBCSDE.GIO.admin_survey\SBCSDE.GIO.county_boundary" X:\ONLINE_DATA_CATALOG county_bnd.shp # "NAME "NAME" true true false 64 Text 0 0 ,First,#,Database Connections\Connection to SBGISSQL VIEWER.sde\SBCSDE.GIO.admin_survey\SBCSDE.GIO.county_boundary,NAME,-1,-1;area "area" true true true 8 Double 8 38 ,First,#,Database Connections\Connection to SBGISSQL VIEWER.sde\SBCSDE.GIO.admin_survey\SBCSDE.GIO.county_boundary,SBCSDE.GIO.county_boundary.area,-1,-1;len "len" true true true 8 Double 8 38 ,First,#,Database Connections\Connection to SBGISSQL VIEWER.sde\SBCSDE.GIO.admin_survey\SBCSDE.GIO.county_boundary,SBCSDE.GIO.county_boundary.len,-1,-1;Shape_area "Shape_area" false false true 0 Double 0 0 ,First,#,Database Connections\Connection to SBGISSQL VIEWER.sde\SBCSDE.GIO.admin_survey\SBCSDE.GIO.county_boundary,Shape.area,-1,-1;Shape_len "Shape_len" false false true 0 Double 0 0 ,First,#,Database Connections\Connection to SBGISSQL VIEWER.sde\SBCSDE.GIO.admin_survey\SBCSDE.GIO.county_boundary,Shape.len,-1,-1" #</Process></lineage><copyHistory><copy source="H:\esm215\data\cosb\county_bnd" dest="\\babylon\co2016\bbest_student\esm215\data\cosb\raw\county_bnd" date="20150107" time="20060500"></copy></copyHistory></DataProperties></Esri><dataIdInfo><envirDesc Sync="TRUE">Microsoft Windows XP Version 5.1 (Build 2600) Service Pack 3; ESRI ArcGIS 10.0.0.2414</envirDesc><dataLang><languageCode Sync="TRUE" value="en" country="US"></languageCode></dataLang><idCitation><resTitle Sync="TRUE">county_bnd</resTitle><presForm><PresFormCd Sync="TRUE" value="005"></PresFormCd></presForm></idCitation><spatRpType><SpatRepTypCd Sync="TRUE" value="001"></SpatRepTypCd></spatRpType><dataExt><geoEle><GeoBndBox esriExtentType="native"><westBL Sync="TRUE">5760742.565996</westBL><eastBL Sync="TRUE">6128664.282907</eastBL><northBL Sync="TRUE">2234398.805099</northBL><southBL Sync="TRUE">1961373.193015</southBL><exTypeCode Sync="TRUE">1</exTypeCode></GeoBndBox></geoEle></dataExt><geoBox esriExtentType="decdegrees"><westBL Sync="TRUE">-120.678021</westBL><eastBL Sync="TRUE">-119.435023</eastBL><northBL Sync="TRUE">35.123559</northBL><southBL Sync="TRUE">34.352873</southBL><exTypeCode Sync="TRUE">1</exTypeCode></geoBox><descKeys><thesaName uuidref="723f6998-058e-11dc-8314-0800200c9a66"></thesaName><keyword Sync="TRUE">002</keyword></descKeys></dataIdInfo><mdLang><languageCode Sync="TRUE" value="en"></languageCode></mdLang><mdStanName Sync="TRUE">ISO 19115 Geographic Information - Metadata</mdStanName><mdStanVer Sync="TRUE">DIS_ESRI1.0</mdStanVer><mdChar><CharSetCd Sync="TRUE" value="004"></CharSetCd></mdChar><mdHrLv><ScopeCd Sync="TRUE" value="005"></ScopeCd></mdHrLv><mdHrLvName Sync="TRUE">dataset</mdHrLvName><distInfo><distributor><distorTran><onLineSrc><orDesc Sync="TRUE">002</orDesc><linkage Sync="TRUE">Server=SBGISSQL; Service=sde:sqlserver:sbgissql; Database=SBCSDE; User=PW_SURVEY01; Version=sde.DEFAULT</linkage><protocol Sync="TRUE">ArcSDE Connection</protocol></onLineSrc><transSize Sync="TRUE">0.086</transSize></distorTran><distorFormat><formatName Sync="TRUE">SDE Feature Class</formatName></distorFormat></distributor><distFormat><formatName Sync="TRUE">Shapefile</formatName></distFormat><distTranOps><transSize Sync="TRUE">0.000</transSize></distTranOps></distInfo><refSysInfo><RefSystem><refSysID><identCode Sync="TRUE" code="2229">NAD_1983_StatePlane_California_V_FIPS_0405_Feet</identCode><idCodeSpace Sync="TRUE">EPSG</idCodeSpace><idVersion Sync="TRUE">7.4.1</idVersion></refSysID></RefSystem></refSysInfo><spatRepInfo><VectSpatRep><topLvl><TopoLevCd Sync="TRUE" value="001"></TopoLevCd></topLvl><geometObjs Name="SBCSDE.GIO.county_boundary"><geoObjTyp><GeoObjTypCd Sync="TRUE" value="002"></GeoObjTypCd><geoObjCnt Sync="TRUE">0</geoObjCnt></geoObjTyp><geoObjCnt Sync="TRUE">1</geoObjCnt></geometObjs></VectSpatRep></spatRepInfo><mdDateSt Sync="TRUE">20100728</mdDateSt></metadata>

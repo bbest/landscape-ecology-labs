@@ -1,0 +1,322 @@
+---
+title: "Lab 2. Scale: Quantifying Landcover Changes in Time and Space"
+author: "Ben Best"
+date: "January 15, 2015"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+# Objective
+
+Scale is an ever present topic in 
+
+- time: NLCD for 2001, 2006, 2011, and into future
+
+## Forecasting Change with a Markov Model
+
+
+
+## About R
+
+- eda
+- CRAN Spatial Task View
+
+## Launch RStudio 
+
+Normally R launches just a command window. You'll instead use the friendlier RStudio interface...
+
+- create new script
+
+- select with mouse, Ctrl+Enter to run
+
+- help on function. Type `help(raster)` or shortcut `?raster` or simply place cursor on function in your script and F1 key. Or `help_search('zonal')` or shortcut `??zonal`.
+
+- Environment shows variables
+
+## Update R Packages
+
+Packages -> Update. This might take a couple minutes to get the full listing. Scroll way down to raster, tick just the box for updating the raster package, and click Install Updates button. If all goes well, you should be able to type raster in the Packages search bar and see that it's registered as Version 2.3-12 like so:
+
+![](img\rstudio_packages_raster_updated.PNG)
+
+## TODO
+
+- ggmap background
+
+# Reading Rasters in R
+
+```{r read nlcd}
+# load necessary libraries having useful functions, suppressing startup messages
+suppressPackageStartupMessages({
+  library(rgdal)  # R version of Geospatial Data Abstraction Library (GDAL)
+  library(raster)
+  #library(rasterVis)
+  library(rgeos)
+  library(dplyr) # raster overrides: intersect, select, union
+  })
+
+# Set your working directory
+setwd('/Users/bbest/github/landscape-ecology/wk02_scale/lab2_scale')
+#setwd('H:/esm215/lab2_scale')
+
+# read rasters as a stack
+nlcd_2001 = raster('raster/nlcd_2001.tif')
+nlcd_2006 = raster('raster/nlcd_2006.tif')
+nlcd_2011 = raster('raster/nlcd_2011.tif')
+
+# let's look at the properties of the NLCD raster
+nlcd_2011
+# notice the coordinate reference system ('coord. ref.') is in Albers Equal Area (AEA) with a 30 x 30 resolution
+# Q. In what units?
+
+# nlcd = stack(
+#   'raster/nlcd_2001.tif',
+#   'raster/nlcd_2006.tif',
+#   'raster/nlcd_2011.tif')
+
+# read vectors
+county_lcc = readOGR('vector', 'county_bnd')
+cities_lcc = readOGR('vector', 'city_boundary_no_ocean')
+
+# raster math
+nlcd_2001not2006 = nlcd_2001 != nlcd_2006
+
+# plot
+plot(nlcd_2011)
+plot(county_lcc, add=T) # no show
+
+# get coordinate reference systems
+crs(nlcd_2011)
+crs(county_lcc)
+
+# project, aka transform, into same coordinate system as NLCD
+county_aea = spTransform(county_lcc, crs(nlcd_2011))
+cities_aea = spTransform(cities_lcc, crs(nlcd_2011))
+
+# let's look at the attributes of cities_aea
+cities_aea@data
+city_name = 'Santa Barbara'
+
+# extract just Santa Maria from cities
+names(cities_aea)
+city_poly = cities_aea[cities_aea@data$CITY == city_name,]
+city_bbox = bbox(city_poly)
+city_bbox
+
+city_lc11 = crop(nlcd_2011, city_poly)
+
+# plot
+plot(nlcd_2011, xlim=city_bbox['x',], ylim=city_bbox['y',])
+plot(city_poly, add=T, border='black', lwd=2)
+
+nlcd_2011_f2 = aggregate(nlcd_2011, fact=2, fun=modal)
+plot(nlcd_2011_f2), xlim=city_bbox['x',], ylim=city_bbox['y',])
+plot(city_poly, add=T, border='black', lwd=2)
+
+# plot nlcd_2011 for city, with city boundary
+plot(city_lc11)
+plot(city_poly, add=T, border='black', lwd=2)
+
+# aggregate
+city_lc11_f2 = aggregate(city_lc11, fact=2, fun=modal)
+# assign original color table
+city_lc11_f2@legend@colortable = city_lc11@legend@colortable
+plot(city_lc11_f2)
+plot(city_poly, add=T, border='black', lwd=2)
+
+plot(city_lc11_f20 %in% 21:24, add=T)
+
+patches = clump(city_lc11_f2 %in% 21:24, directions=8, gaps=T)
+patches_ply = rasterToPolygons(patches, dissolve=T)
+length(patches_ply) # 70
+plot(patches_ply, border='blue', add=T)
+
+# average area of patch in km2
+mean(area(patches_ply)) / (1000 * 1000)
+
+city_lc11_f8 = aggregate(city_lc11, fact=8, fun=modal)
+city_lc11_f8@legend@colortable = city_lc11@legend@colortable
+plot(city_lc11_f8)
+plot(city_poly, add=T, border='black', lwd=2)
+
+city_lc11_f10 = aggregate(city_lc11, fact=10, fun=modal)
+city_lc11_f10@legend@colortable = city_lc11@legend@colortable
+plot(city_lc11_f10)
+plot(city_poly, add=T, border='black', lwd=2)
+
+city_lc11_f16 = aggregate(city_lc11, fact=16, fun=modal)
+city_lc11_f16@legend@colortable = city_lc11@legend@colortable
+plot(city_lc11_f16)
+plot(city_poly, add=T, border='black', lwd=2)
+
+city_lc11_f20 = aggregate(city_lc11, fact=20, fun=modal)
+city_lc11_f20@legend@colortable = city_lc11@legend@colortable
+plot(city_lc11_f20)
+plot(city_poly, add=T, border='black', lwd=2)
+
+freq(city_lc11_f20)
+
+# identify values in raster
+click(city_lc11_f20)
+
+# get patches
+plot(city_lc11_f20 %in% 21:24)
+city_lc11_f20_23patches = clump(city_lc11_f20 %in% 21:24, directions=8, gaps=T)
+city_lc11_f20_23patches_ply = rasterToPolygons(city_lc11_f20_23patches, dissolve=T)
+freq(city_lc11_f20_23patches)
+plot(city_lc11_f20_23patches_ply, border='blue', add=T)
+freq(city_lc11_f20_patches)
+
+# number of patches
+length(city_lc11_f20_23patches_ply)
+
+# get area in km2 of urban area
+sum(area(city_lc11_f20_23patches_ply)) / (1000 * 1000)
+
+x = rgeos::gIntersection(city_poly, city_lc11_f20_23patches_ply)
+plot(x)
+plot(x, border='blue', add=T, lwd=2)
+
+# extract area and report as percentages
+
+# extract all values into a sum
+system.time({
+county_nlcd_2011 = extract(nlcd_2011, county_aea, fun=sum)
+}) # 242.58 / 60 = 4 min
+
+# extract all values into a list
+system.time({
+county_nlcd_2011 = extract(nlcd_2011, county_aea)
+}) # 240.53 / 60 = 4 min
+
+# get frequency of each landcover class
+table(county_nlcd_2011) 
+
+# crop to just Santa Maria 
+sm_lc11 = crop(nlcd_2011, sm)
+
+sm_lc = crop(nlcd, sm) # returns RasterBrick
+#sm_lc_z = setZ(sm_lc, c(2001,2006,2011))
+#levelplot(sm_lc_z) # all the layers must share the same RAT
+
+# crop for stack
+sm_lc = stack(
+  crop(nlcd_2001, sm),
+  crop(nlcd_2006, sm),
+  crop(nlcd_2011, sm))
+
+plot(raster(sm_lc, 'nlcd_2001'))
+plot(raster(sm_lc, 'nlcd_2006'))
+plot(raster(sm_lc, 'nlcd_2011'))
+levelplot(sm_lc) # all the layers must share the same RAT
+
+# plot lc11
+plot(sm_lc11)
+plot(sm, add=T, border='black', lwd=2)
+
+# add legend
+d = read.csv('raster/nlcd_code2class.csv')
+d$class = sprintf('%s - %d', d$class, d$code)
+d$colors = city_lc11@legend@colortable[d$code+1]
+idx = d$code %in% freq(city_lc11)[,'value']
+legend(x='bottomleft', legend=d$class[idx] , fill=d$colors[idx], cex=0.5)
+
+
+
+# plot stack slice
+plot(sm_lc['nlcd_2001'])
+
+# get table frequencies of extracted landcover types for Santa Maria
+sm_lc11 = table(extract(sm_lc11, sm))
+
+# get freq from stack
+sm01 = extract(nlcd_2001, sm)[[1]]
+sm06 = extract(nlcd_2006, sm)[[1]]
+sm11 = extract(nlcd_2011, sm)[[1]]
+# length(sm01);length(sm06);length(sm11); 
+
+
+sm = data.frame(
+  lc01 = sm01,
+  lc06 = sm06,
+  lc11 = sm11) %>%
+  mutate(
+    lc06not01 = lc06 != lc01,
+    lc11not06 = lc11 != lc06)
+
+sm %>%
+  filter(lc06not01 == T) %>%
+  head
+
+# **raw tally matrix** for _m_ cover types for _m x m_ matrix
+sm_chg = table(sm[,c('lc01','lc06')])
+
+# **transition matrix _P_**
+m = addmargins(sm_chg, 2)
+P = m / m[,ncol(m)]
+P = P[,1:(ncol(P)-1)]
+write.csv(P[,1:(ncol(P)-1)], 'P_SantaMaria_NLCD2001to2006.csv')
+print(P, digits=2)
+
+# get steady state
+E = eigen(P)$values
+m[,ncol(m)]*E
+
+# verification of 2006: m_2001 * P
+m_2006 = m[,ncol(m)] * P
+
+
+
+```
+
+
+Note: change could transition between states.
+
+Note: transition P for 5 year period.
+
+Develop forecast model using data from 2001 to 2006, forecast to 2011 and validate with 2011 nlcd.
+
+Validation uses independent data set, not part of original study.
+
+http://www.sosmath.com/matrix/markov/markov.html
+
+Rosswall et al. (1988), the Markov model "... remains remarkably useful as a first approximation
+to changes taking place from one state to another
+when only the probabilities of the transitions can be
+estimated."
+
+- Brazil Cama. Malthus past predicts future. Scale of land tenure.
+
+The `plot` command is returning the following error, presumably from funky raster 2.3-0 version (whereas works on Mac with 2.3-12):
+
+```
+Error in `colnames<-`(`*tmp*`, value = "nlcd_2011") : 
+  length of 'dimnames' [2] not equal to array extent
+```
+
+To get around this, please visit Packages > Update.
+
+
+# get frequency of landcover classes
+tbl = freq(nlcd_2001) %>%
+
+# convert to area
+nlcd_2001 # resolution  : 30, 30  (x, y)
+
+
+```
+
+
+# Spatial Scaling
+
+- rescale landcover using majority vs central points
+
+- interpolate using NEAREST for categorical (eg nlcd_2011) vs BILINEAR for continuous (slope)
+
+ - change grain and extent, heterogenous and homogenous (randomize location of landcover, then rescale) to generate Wiens Fig 1 & 2.
+
+# Forecasting using a Markov Model
+
+- probability matrix

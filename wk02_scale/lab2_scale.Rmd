@@ -1,0 +1,58 @@
+---
+title: "Lab 2. Scale: Quantifying Landcover Changes in Time and Space"
+author: "Ben Best"
+date: "January 15, 2015"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+# Objective
+
+Scale is an ever present topic in 
+
+# Reading Rasters in R
+
+```{r read nlcd}
+# load necessary libraries
+suppressPackageStartupMessages({
+  library(rgdal)  # R version of Geospatial Data Abstraction Library (GDAL)
+  library(raster)
+  library(dplyr) # raster overrides: intersect, select, union
+  })
+
+# Set your working directory
+setwd('/Users/bbest/github/landscape-ecology/wk02_scale/data')
+
+# read rasters
+nlcd_2001 = raster('nlcd_2001.tif')
+nlcd_2006 = raster('nlcd_2006.tif')
+nlcd_2011 = raster('nlcd_2011.tif')
+
+nlcd_2001not2006 = nlcd_2001 != nlcd_2006
+
+# plot
+plot(nlcd_2011)
+
+# get frequency of landcover classes
+tbl = freq(nlcd_2001) %>%
+
+# convert to area
+nlcd_2001 # resolution  : 30, 30  (x, y)
+
+
+```
+
+
+# Spatial Scaling
+
+- rescale landcover using majority vs central points
+
+- interpolate using NEAREST for categorical (eg nlcd_2011) vs BILINEAR for continuous (slope)
+
+ - change grain and extent, heterogenous and homogenous (randomize location of landcover, then rescale) to generate Wiens Fig 1 & 2.
+
+# Forecasting using a Markov Model
+
+- probability matrix

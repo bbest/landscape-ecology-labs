@@ -1,0 +1,12 @@
+---
+title: "lab3_rpart"
+author: "Ben Best"
+date: "January 21, 2015"
+output: html_document
+---
+
+
+```{r}
+summary(cars)
+```
+

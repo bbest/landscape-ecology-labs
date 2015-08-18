@@ -1,0 +1,17 @@
+code,nlcd_class,resistance,usgs_class
+0,No Data,0,
+11,Open Water,0,
+21,"Developed, Open Space",52,Developed open space
+22,"Developed, Low Intensity",64,Developed low intensity
+23,"Developed, Medium Intensity",76,Developed medium intensity
+24,"Developed, High Intensity",85,Developed high intensity
+31,Barren Land (Rock/Sand/Clay),24,Other disturbed lands
+41,Deciduous Forest,7,Forest
+42,Evergreen Forest,7,Forest
+43,Mixed Forest,7,Forest
+52,Shrub/Scrub,5,Shrubland
+71,Grassland/Herbaceous,17,Grassland
+81,Pasture/Hay,56,Agricultural pasture/hay
+82,Cultivated Crops,68,Agricultural cropland
+90,Woody Wetlands,11,Wetlands
+95,Emergent Herbaceous Wetlands,11,Wetlands

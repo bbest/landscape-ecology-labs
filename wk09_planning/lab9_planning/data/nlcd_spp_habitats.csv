@@ -1,0 +1,17 @@
+code,nlcd_class,spp_id,spp_name
+0,No Data,,
+11,Open Water,,
+21,"Developed, Open Space",,
+22,"Developed, Low Intensity",,
+23,"Developed, Medium Intensity",,
+24,"Developed, High Intensity",,
+31,Barren Land (Rock/Sand/Clay),,
+41,Deciduous Forest,21,forest
+42,Evergreen Forest,21,forest
+43,Mixed Forest,21,forest
+52,Shrub/Scrub,22,shrubland
+71,Grassland/Herbaceous,23,grassland
+81,Pasture/Hay,,
+82,Cultivated Crops,,
+90,Woody Wetlands,24,wetlands
+95,Emergent Herbaceous Wetlands,24,wetlands
