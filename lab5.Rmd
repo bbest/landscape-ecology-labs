@@ -1,0 +1,252 @@
+---
+title: "Lab 5. Disturbance: Simulating Forest Fires"
+author: "Ben Best"
+date: "Feb 5, 2015"
+output:
+  html_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+  word_document: default
+---
+
+Due: 5pm Wed, Feb 13 2015 via GauchoSpace
+
+# Introduction {-}
+
+In this lab, you'll simulate the disturbance fire and age succession in a forest landscape using the software program LANDIS. Since this program requires many parameters to run, we'll use the example dataset for northern Wisconsin with the following tree species (_Genus species_) [code]:
+
+- Balsam fir (_Abies balsamea_) [abiebals]
+- Red maple (_Acer rubrum_) [acerrubr]
+- Sugar maple (_Acer saccharum_) [acersacc]
+- Yellow birch (_Betula alleghaniensis_) [betualle]
+- Paper birch (_Betula papyrifera_) [betupapy]
+- White ash (_Fraxinus americana_) [fraxamer]
+- White spruce (_Picea glauca_) [piceglau]
+- Jack pine (_Pinus banksiana_) [pinubank]
+- Red pine (_Pinus resinosa_) [pinuresi]
+- Eastern white pine (_Pinus strobus_) [pinustro]
+- Quaking aspen (_Populus tremuloides_) [poputrem]
+- Northern pin oak (_Quercus ellipsoidalis_) [querelli]
+- Northern red oak (_Quercus rubra_) [querrubr]
+- Northern white cedar (_Thuja occidentalis_) [thujocci]
+- American basswood (_Tilia americana_) [tiliamer]
+- Eastern hemlock (_Tsuga canadensis_) [tsugcana]
+
+# Download Zip, Open Rmd
+
+Download **`lab5_disturbance.7z`** from GauchoSpace into your course home directory (eg `H:\esm215`). Right-click on the file -> 7-Zip -> Extract Here. Navigate into the newly expanded `lab5_disturbance` folder with Windows Explorer.
+
+**WARNING!**  If you simply left-click on the file in GauchoSpace most web browsers will automatically save the file into your user profile's Downloads folder in the C drive. This can cause many problems ranging from not being able to find input file paths for R code or losing all your work entirely.
+
+Right-click on **`lab5.Rmd`** -> Open with... -> RStudio.
+
+Set the working directory **`wd`** variable in the first R code chunk below to wherever you extracted the lab4_metrics.z file. If you're copying the path from the address bar of Windows Explorer (recommended to avoid misspellings), you'll need to replace Windows backslashes `\` with R friendly forward slashes `/` for this value.
+
+There are two modes then of running the code, each with slightly different behavior.
+
+1. **Console mode**. You can run code line by line (select line(s) and hit Ctrl+Enter to execute individuall) or for whole chunks at a time (place cursor in R code chunk and see various options in dropdown "Chunks" to run current / previous / next / all). This mode requires that you run the set working directory command (`setwd`). The rest of the code then uses this as the starting path to find other inputs relative to it.
+
+2. **Knit mode**. When you run "Knit HTML" on an R markdown file it "knits" the plain text chunks (white background) with the outputs of the R code (gray background, switched on/off with three backticks). When running in this mode, the working directory (`setwd`) is automatically set to the directory containing the *.Rmd file you are knitting. So if this file is not properly contained within the lab5_disturbance folder, paths might become again problematic. For more details on how R markdown works, see [rmarkdown.rstudio.com](http://rmarkdown.rstudio.com).
+
+```{r set_variables}
+# set working directory
+wd = 'H:/esm215/lab5_disturbance'
+setwd(wd)
+```
+
+# Read LANDIS Documentation, Inspect scenario_01
+
+You'll notice folder `scenario_01` containing all the parameterized input files ready to run a LANDIS simulation. In order to understand how these input files work, you'll need to consult the LANDIS documentation for the core model and [extensions](http://www.landis-ii.org/extensions) available throuh your Start menu > ScienceApps > LANDIS-II > v6 > docs, especially:
+
+- Model v6.1 Description
+- Age-Only Succession v4.0
+- Base Fire v3.0
+- Output Max Species Age v2.0
+
+We'll be using the Base Fire extension to stochastically simulate fire and the Output Max Species Age to evaluate cohorts by species.
+
+The flow of this lab is generally to iterate through the following sections of instructions, and each time you may:
+
+1. **Modify scenario files**
+
+1. **Run LANDIS** for scenario(s)
+
+1. **Run R code** by Knitting HTML to summarize results
+
+Questions are peppered throughout the lab instructions and more details on the writeup are at the botom.
+
+# Show Input Rasters
+
+```{r plot_inputs, eval=T, echo=F, fig.show='hold'}
+
+# ensure raster package of at least version 2.3-12 is installed
+if (installed.packages()['raster','Version'] < '2.3-12'){
+  message('Your raster package needs to be updated...')
+  if ('package:raster' %in% search()) detach('package:raster', unload=TRUE)
+  install.packages('raster')
+}
+
+# load necessary libraries having useful functions
+suppressPackageStartupMessages(suppressWarnings({
+  library(rgdal)   # read/write raster/vector data
+  library(raster)  # raster functions
+  library(ggplot2) # plotting functions
+  library(fields)  # tim.colors
+  library(dplyr)
+  require(ggplot2)
+  library(knitr)
+  }))
+
+# ecoregions
+r = raster(file.path(wd, 'raster/ecoregions.img'))
+plot(r, col=tim.colors(length(unique(r))), main='ecoregions')
+    
+# initial-communities
+r = raster(file.path(wd, 'raster/initial-communities.img'))
+plot(r, col=tim.colors(length(unique(r))), main='initial-communities')
+
+# main plotting function
+plot_output = function(dir, pfx, yrs_plot){  
+  # dir=dir_output, pfx='reclass1', yrs_plot=c(0, 10, 50, 100)
+  
+  # scenario
+  scenario = basename(dirname(dir))
+  
+  # setup data frame to store counts and get years available
+  d = data.frame(year=integer(), value=numeric(), count=integer())
+  imgs = list.files(dir, sprintf('%s-[0-9]+.img', pfx), full.names=T)
+  if(length(imgs)==0){
+    return(sprintf('No raster outputs found for specified dir (%s) and pfx (%s).', 
+                 dir, pfx))
+  }
+  yrs  = sort(as.integer(sub(sprintf('%s-([0-9]+).img', pfx), '\\1', basename(imgs))))
+  if(any(!yrs_plot %in% yrs)){
+    stop(sprintf('The following specified years for specified dir (%s) and pfx (%s) are not available to plot: %s.',
+                 dir, pfx, paste(yrs_plot[!yrs_plot %in% yrs], collapse=', ')))
+  }
+
+  if (pfx=='fire-severity'){
+    # data for points of fire ignition
+    d_f = read.csv(file.path(dir, 'fire-log.csv'))  
+  }
+  
+  # plot only a subset of years chosen
+  for (yr in yrs_plot){ 
+    
+    # raster of value
+    r = raster(sprintf('%s/%s-%d.img', dir, pfx, yr))
+    plot(r, col=tim.colors(length(unique(r))), main=sprintf('%s: %s, year %d', scenario, pfx, yr))
+    
+    if (pfx=='fire-severity'){
+      # points of fire ignition  
+      pts = filter(d_f, Time == yr)
+      coordinates(pts) = ~InitialSiteColumn+InitialSiteRow
+      text(pts, pts$MeanSeverity, col='red')
+    }
+  }
+  
+  # get data for reclass across all years
+  for (yr in yrs){     
+    r = raster(sprintf('%s/%s-%d.img', dir, pfx, yr))
+    d = rbind(
+      d,
+      freq(r) %>%
+        as.data.frame() %>%
+        mutate(year = yr) %>%
+        select(year, value, count))
+  }
+  
+  # plot reclass across years
+  d$value = factor(d$value)
+  ggplot(d, aes(x=year, y=count)) + 
+    geom_area(aes(fill=value), position='fill') +
+    ylab('proportion') +
+    ggtitle(sprintf('%s: %s over time', scenario, pfx))
+}
+
+```
+
+
+Here's a table of cell counts by community value code.
+```{r communities_table, eval=T, echo=F, results='asis'}
+freq(r) %>% kable()
+```
+
+**Question**. Which species and age cohorts (represented as a percentage of species lifespan, ie Longevity) are in the least and most abundant initial communities? _(Hint: You'll need to consult the Model v6.1 Description documentation, files species.txt and initial-communities.txt, and perform extremely simple math.)_
+
+# Fire it up! [scenario_01]
+
+Ok, time to run LANDIS, which is as simple as navigating into the scenario_01 folder from Windows Explorer and double-clicking on the batch file `SimpleBatchFile.bat`, which is just a shortcut for opening up a command prompt, changing directory to that folder, and running `landis-ii scenario.txt`. If all's well, then you should see a command window pop up with LANDIS output that finishes to look like this:
+
+![](figures/landis_cmd_result.png)
+
+You can scroll up to look at the output which is also saved to `Landis-log.txt`. Per the message, click "Press any key to continue..." which will close the window (if it's the actively selected window).
+
+It's worth noting the starting off that the `base-fire-6.0.txt` configuration starts with 20 years since the last fire.
+
+Now you can Knit this lab document again to consume the scenario_01 outputs and output the fire severity (and ignition locations numbered by average severity), per the R code below.
+
+```{r plot_scenario_01, eval=T, echo=F, fig.show='hold'}
+plot_output(file.path(wd, 'scenario_01/output'), 'fire-severity', c(10,20,30,40,50))
+```
+
+**Question**. How is the initial decade of fire severity different from the others and why? How do the spatial configuration and properties of ecoregions and initial-communities seem to affect the fire severity?
+
+# Second verse, same as the first [scenario_02, scenario_03]
+
+Since this forest fire model is a stochastic process, copy/paste the entire `scenario_01` folder and rename copies to `scenario_02` and `scenario_03`. Run LANDIS again for these copied scenarios (ie navigate into the folders and double click on `SimpleBatchFile.bat`). Note that running again will overwrite the contents in the outputs folder, which is fine (ie you don't need to delete outputs first).
+
+```{r plot_scenarios_01-02, eval=T, echo=F, fig.show='hold'}
+plot_output(file.path(wd, 'scenario_02/output'), 'fire-severity', c(10,20,30,40,50))
+plot_output(file.path(wd, 'scenario_03/output'), 'fire-severity', c(10,20,30,40,50))
+```
+
+**Question**. Are these replicate runs (using the exact same configurations as scenario_01) different at all and why? Do the general patterns you observed previously still hold true? _(Hint: to visually compare output maps by year between scenarios side by side, you might try Windows docking two browser windows of the rendered HTML output and scrolling to the respective sections of the document.)_
+
+# What's my age again? [scenario_04]
+
+Next, we'll look at some individual species responses using the "Output Max Species Age" extension. In a new copy of scenario_01 named scenario_04, turn on the extension by uncommenting the line (by removing the `>>`) to look like so:
+
+```
+"Output Max Species Age"    max-spp-age.output.txt
+```
+
+Let's look at just Sugar maple (_Acer saccharum_) [acersacc] and Quaking aspen (_Populus tremuloides_) [poputrem]. You'll need to modify the configuration file this extension specifies in order to generate the species outputs.
+
+Since this forest fire model is a stochastic process, copy/paste the entire `scenario_01` folder and rename copies to `scenario_02` and `scenario_03`. Run LANDIS again for these copied scenarios (ie navigate into the folders and double click on `SimpleBatchFile.bat`). Note that running again will overwrite the contents in the outputs folder, which is fine (ie you don't need to delete outputs first).
+
+```{r plot_scenario_04, eval=T, echo=F, fig.show='hold'}
+plot_output(file.path(wd, 'scenario_04/output'), 'fire-severity',  c(10,20,30,40,50))
+plot_output(file.path(wd, 'scenario_04/output'), 'spp_acersacc', c(0,10,20,30,40,50))
+plot_output(file.path(wd, 'scenario_04/output'), 'spp_poputrem', c(0,10,20,30,40,50))
+```
+
+**Question**. How do these species compare, ie who's winning in overall presence versus aging?
+
+# Long may you run... [scenario_05]
+
+Now let's go for the long haul, by copying scenario_04 to scenario_05, modify the scenario's Duration to 1000 years, and run. Knit again to summarize the output.
+
+```{r plot_scenario_05, eval=T, echo=F, fig.show='hold'}
+plot_output(file.path(wd, 'scenario_05/output'), 'fire-severity',  c(10,20,50,100,200,500,1000))
+plot_output(file.path(wd, 'scenario_05/output'), 'spp_acersacc', c(0,10,20,50,100,200,500,1000))
+plot_output(file.path(wd, 'scenario_05/output'), 'spp_poputrem', c(0,10,20,50,100,200,500,1000))
+```
+
+_TIP: This last chunk of code can take a while to process all 1000 years of output, so while editing other parts of the document, you can temporarily turn off the evaluation of this R code chunk with the option `eval=F`._
+
+**Question**. Under this fire regime, do the two species seem to converge to a "climax" steady state and if so around what year? What are the ecoregional associations (or lack thereof) per species in this later successional stage.
+
+**Question**. Based on perusing the documentation, what parameter(s) could you tweak to simulate a fire regime under a future climate change scenario of generally warmer temperature?
+
+# Assignment {-}
+
+You can generate your writeup as either an HTML, Word or PDF document. Notice that from within RStudio you can "knit" to any of these formats from this R markdown file lab5.Rmd to include all tables and figures. 
+
+  ![](figures/rstudio_knit-format.png)
+
+In your final writeup include:
+
+- Questions and responses at top of the document.
+- All figures generated at the bottom of the document, like an appendix.

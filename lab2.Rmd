@@ -1,0 +1,375 @@
+---
+title: "Lab 2. Scale: Quantifying Landcover Changes in Space and Time"
+author: "Ben Best"
+date: "January 15, 2015"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+Due: noon Wed, Jan 21 2015 via GauchoSpace
+
+# Introduction
+
+Scale is an ever present and important topic in ecology. In this lab, you will explore landcover changes in space and time for a city in Santa Barbara County.
+
+- **Space**. Similar to the Wu et al (2013) lecture example from Phoenix, you will rescale the landcover data at several spatial scales.
+
+  ![](img\wu2013_phx-rescaling.png)
+
+- **Time**. You will evaluate landcover at several years (2001, 2006 and 2011). You will also forecast landcover in 2011 using a Markov model.
+
+## Forecasting Change with a Markov Model
+
+_Source_: Urban, D.L and D.O. Wallin (2001) Introduction to Markov Models. In: Learning Landscape Ecology: A Practical Guide to Concepts and Techniques.
+
+One way to summarize landscape change over time is to tally the instances, on a cell-by-cell basis, of changes from cover type in one period to that in another. For $m$ cover types, a **raw tally matrix** then becomes an $m x m$ matrix. Each element $n_ij$ in the matrix then corresponds to the number of cells that changed from the cover type $i$ to cover type $j$. 
+
+A raw tally matrix can then be converted into proportions by dividing the row totals to generate a **transition matrix** $P$. The elements, $p_ij$, of $P$ are the proportions of cells from the original cover type $i$ that converted to cover type $j$. The diagonal elements, $p_ii$ are the proportions of cells that did not change.
+
+A **first-order Markov model** (Useher, 1992) assumes that to predict the state of the system at a future time step $t+1$, one need only know the state of the systme at the current time $t$. The heart of a Markov model is the **transition matrix** $P$, which summarizes the probability that a cell in cover type $i$ will change to cover type $j$ during a single time step.
+
+$$
+x_{t+1} = x_t P
+$$
+
+One convenient features is that the next projection can be multiplied to arrive at $t+2$:
+
+$$
+x_{t+2} = x_{t+1} P = x_{t}PP = x_tP^2
+$$
+
+so that the state of the system at some future interval $k$ can be generally be calcualted with:
+
+$$
+x_{t+k} = x_t P^k
+$$
+
+It is worth pointing out that any detected transition from one cover type to another could've been interceeded by other transitions at finer temporal transitions.
+
+For more on Markov models, read about [Markov Chains](http://sosmath.com/matrix/markov/markov.html).
+
+## Writeup
+
+For your writeup, you'll just strip away this Rmarkdown document to the necessary code, make requested modifications, answer the questions and render as HTML to turn in via GauchoSpace. Be sure to update your name at the top.
+
+## Why R?
+
+Most of this lab could've been accomplished using ArcGIS, however when it comes to manipulation of data and modeling, R offers more direct methods. R was originally developed for [exploratory data analysis](http://en.wikipedia.org/wiki/Exploratory_data_analysis) by Bell Labs in the 1970's, then known as "S" (for statistics) before it evolved into the commercial S-Plus, which prompted a return movement to it's non-commercial predecessor, hence "R". R is open source and cross-platform with a wide variety of packages ready to apply (see [CRAN Task Views](http://cran.r-project.org/web/views/), eg for [Spatial](http://cran.r-project.org/web/views/Spatial.html)).
+
+# Open Rmarkdown in RStudio 
+
+Normally R launches just a command window. You'll instead use the friendlier RStudio interface.
+
+1. **Extract lab2_scale.z to your H:\esm215**. Copy the following file:
+
+    ```
+    R:\Winter2015\ESM215\lab2_scale.zip
+    ```
+  
+    into your home directory for the class `H:\esm215`, right-click and unzip there. The remainder of this lab will assume your working directory is `H:\esm215\lab2_scale`. If you use a different working directory, just set that at the beginning of the script below.
+
+1. **Open lab2_scale.Rmd**. The default editor for Rmarkdown files (explained later) is Tinn-R. We'll use the more capable RStudio editor instead, which you can invoke from Windows Explorer by right-clicking on the `lab2_scale.Rmd` file -> Open with -> RStudio. May be slow to launch.
+
+    ![](img\explorer_Rmd.png)
+
+1. **Update raster package**. The raster package on the lab machines needs to get updated to the latest version to avoid producing an error message . Go to the Packages pane and click the Update button. This might take a couple minutes to get the full listing. Scroll way down to raster, and tick just the box for updating the raster package, and click Install Updates button. (Do not update all packages because this will take a long time and hang up your RStudio session.) If all goes well, you should be able to type "raster"" in the Packages search bar (after a Refresh) and see that it's registered as Version 2.3-12 like so:
+
+    ![](img\rstudio_packages_raster_updated.PNG)
+    
+    - select with mouse, Ctrl+Enter to run
+
+You'll notice several panes:
+
+- **Editor** pane for editing your lab2_scale.Rmd
+- **Console** for entering commands
+- **Environment** to show variables
+- **Files** listing files and folders
+
+For help on function, type `help(raster)` or shortcut `?raster` into the Console or simply place cursor on function in a script of Editor pane and hit the F1 key. You can also search the help for functions across available packages like so: `help_search('zonal')` or shortcut `??zonal`.
+
+## What is R Markdown (*.Rmd)?
+
+R Markdown is a file format allowing you to weave easy formatting of text (markdown) with code (R). For more, see:
+
+- [Using R Markdown](https://support.rstudio.com/hc/en-us/articles/200552086-Using-R-Markdown)
+- [R Markdown cheat sheet](http://blog.rstudio.org/2014/08/01/the-r-markdown-cheat-sheet/)
+- [R Markdown reference](http://rmarkdown.rstudio.com/)
+
+## R Basics
+
+Here are a few basics:
+
+- Commments are preceeded with `#` and show up as light green in the RStudio Editor and light grey in the rendered Rmarkdown document.
+
+- White aspace does not matter, but indentation is a good idea for readability.
+
+- Functions have arguments: `function(argument1, argument2, ...)`.
+
+- Variable assignment(`=` or `<-`) to `'string'` or `'"string"'` vs number `1` vs boolean `TRUE`/`FALSE` or `T`,`F`.
+
+# Methods
+
+## Read Data
+
+```{r read data}
+
+# load necessary libraries having useful functions, suppressing startup messages and warnings
+suppressPackageStartupMessages(suppressWarnings({
+  library(reshape) # reshaping functions: rename
+  library(dplyr)   # dataframe functions: select
+  library(rgdal)   # read/write raster/vector data
+  library(raster)  # raster functions
+  library(rgeos)   # vector functions
+  library(knitr)   # knitting functions: kable
+  }))
+
+# Set your working directory
+setwd('H:/esm215/lab2_scale')
+
+# read in landcover rasters, relative to working directory
+nlcd_2001 = raster('raster/nlcd_2001.tif')
+nlcd_2006 = raster('raster/nlcd_2006.tif')
+nlcd_2011 = raster('raster/nlcd_2011.tif')
+
+# read in county and city boundary vectors
+# note arguments to readOGR function for ESRI Shapefile: 
+#  data source name (dsn) = directory
+#  layer = shapefile filename without shp extension
+cities = readOGR('vector', 'city_boundary_no_ocean')
+```
+
+## Plot and Transform
+
+Try plotting the cities on top of landcover.
+
+```{r plot bad, fig.keep='last'}
+# try plotting landcover and cities on top
+plot(nlcd_2011)
+plot(cities, border='black', lwd=2, add=T)
+```
+
+You'll notice that nothing besides the landcover shows up. Unlike ArcGIS, R does not automatically reproject data, so we'll need to project, or "transform", the cities data to match the landcover data. First, let's look at summary information on each.
+
+```{r inspect}
+nlcd_2011
+cities
+```
+
+**Question. Provide the full name, resolution (just landcover) and units for the original projection of the landcover raster and cities polygons.**
+
+_**Tip**: Consult with this [Projections List](http://www.remotesensing.org/geotiff/proj_list/) to infer and confirm the full name for the abbreviation provided in the `+proj` argument of the coordinate reference system._
+
+Now let's project cities into the same coordinate reference system (crs) as the landcover.
+
+```{r transform}
+# project, aka transform, into same coordinate system as NLCD
+cities_aea = spTransform(cities, crs(nlcd_2011))
+```
+
+Ok, now let's try plotting again. And for more readability we'll include the city names from the cities attribute table.
+
+```{r plot good, fig.keep='last'}
+# plot landcover and projected cities on top
+plot(nlcd_2011)
+plot(cities_aea, border='black', lwd=2, add=T)
+lbls = polygonsLabel(cities_aea, cities_aea@data$CITY, 'centroid', cex=1, doPlot=T, col='darkblue')
+```
+
+**Question. What do the `lwd`, `cex` and `col` arguments do in the above plotting functions? Provide valid alternatives for each to produce a slightly different figure.**
+
+_**Tip**: Open the help for setting graphical parameters (`?par`) and search there._
+
+Let's look at the full table of possibly city values.
+
+```{r table, results='asis'}
+# knit table (kable) of available city values
+kable(cities_aea@data[,'CITY', drop=F], row.names=F)
+```
+
+## Choose City
+
+The rest of the lab is premised on a chosen city, so that we can zoom into a smaller area with mixed use and where landcover is more likely to have changed over time (versus the entire county). We'll use "Santa Barbara" for demonstration purposes for the rest of the lab, and you'll choose a different city to similarly evaluate landcover at different resolutions and over time.
+
+```{r city, fig.keep='last'}
+
+# select city, extract polygon and get bounding box
+city = 'Santa Barbara'
+poly = cities_aea[cities_aea@data$CITY == city,]
+bbox = bbox(poly)
+
+# crop and mask landcover to the city
+lc01 = mask(crop(nlcd_2001, poly), poly)
+lc06 = mask(crop(nlcd_2006, poly), poly)
+lc11 = mask(crop(nlcd_2011, poly), poly)
+
+# apply original color table to city landcover
+lc01@legend@colortable = nlcd_2011@legend@colortable
+lc06@legend@colortable = nlcd_2011@legend@colortable
+lc11@legend@colortable = nlcd_2011@legend@colortable
+
+# plot
+plot(lc11)
+
+# add legend
+add_legend = function(r, title=NULL, ref=nlcd_2011, lut='raster/nlcd_code2class.csv'){
+  d = read.csv(lut)
+  d$class = sprintf('%s - %d', d$class, d$code)
+  d$colors = ref@legend@colortable[d$code+1]
+  idx = d$code %in% freq(r)[,'value']
+  legend(x='bottomleft', legend=d$class[idx] , fill=d$colors[idx], cex=0.7, bg='white', title=title)
+}
+add_legend(lc11, 'Landcover 2011')
+```
+
+**Question. Which city (not Santa Barbara) do you choose? Substitute your chosen city for Santa Barbara in code above and regenerate the zoomed in raster map.**
+
+_**Tip**: You may want to change the `cex` and `x` arguments to the legend() function for the least interference._
+
+## Evaluate Landcover at Different Spatial Resolutions, ie Grain
+
+Next, let's quantify the 2011 landcover at different resolutions (ie at increased grain size) and see how the variety of landcover types changes.
+
+```{r aggregate}
+# aggregate resolution
+lc11_f2  = aggregate(lc11, fact=2 , fun=modal)
+lc11_f10 = aggregate(lc11, fact=10, fun=modal)
+lc11_f20 = aggregate(lc11, fact=20, fun=modal)
+
+# apply original color table to city landcover
+lc11_f2@legend@colortable  = lc11@legend@colortable
+lc11_f10@legend@colortable = lc11@legend@colortable
+lc11_f20@legend@colortable = lc11@legend@colortable
+```
+
+**Question. Why did we need to use `fun=modal` (versus the default `fun=mean`) for aggregating landcover?**
+
+_**Tip**: Look up the help for aggregate() (`?aggregate`, raster package version) and consider the different [types of raster data](http://resources.arcgis.com/en/help/main/10.2/index.html#//009t00000002000000)._
+
+Let's plot out the different rasters at various factors.
+
+**Question. Plot rasters at various factors.**
+
+```{r f2, fig.keep='last'}
+plot(lc11_f2)
+add_legend(lc11_f2, 'Landcover 2011, x2')
+```
+
+```{r f10, fig.keep='last'}
+plot(lc11_f10)
+add_legend(lc11_f10, 'Landcover 2011, x10')
+```
+
+```{r f02, fig.keep='last'}
+plot(lc11_f20)
+add_legend(lc11_f20, 'Landcover 2011, x20')
+```
+
+**Question. Tabulate changes in landcover change going from fine to coarse. Which landcover types grow the most versus those that shrink or even get wholly dropped with increasing grain size? Is there a general relationship between changing resolutions from fine to coarse and percent coverage?**
+
+```{r change in space, results='asis'}
+
+# join tables by landcover value
+x = merge(merge(merge(
+  rename(as.data.frame(freq(lc11))   , c('count'='n_x')),
+  rename(as.data.frame(freq(lc11_f2)), c('count'='n_x2')),
+  by='value', all=T),
+  rename(as.data.frame(freq(lc11_f10)), c('count'='n_x10')),
+  by='value', all=T),
+  rename(as.data.frame(freq(lc11_f20)), c('count'='n_x20')),
+  by='value', all=T)
+
+# drop NA landcover value, substitute other NAs with 0
+x = subset(x, !is.na(value))
+x[is.na(x)] = 0
+
+# calculate as percentages
+x = within(x, {
+  pct_x20 = round(n_x20 / sum(n_x20) * 100, 1)
+  pct_x10 = round(n_x10 / sum(n_x10) * 100, 1)
+  pct_x2  = round(n_x2  / sum(n_x2)  * 100, 1)
+  pct_x   = round(n_x   / sum(n_x)   * 100, 1)
+})
+
+# knit table (kable) of changes with spatial resolution
+kable(x, row.names=F)
+```
+
+## Evaluate Landcover Change over Time and Forecast using Markov Model
+
+**Question. Extract the raw tally matrix of counts transitioning from 2001 to 2006.**
+
+```{r tally matrix, results='asis'}
+# extract values per pixel (row) across years (column)
+v = data.frame(
+  lc01 = values(lc01),
+  lc06 = values(lc06),
+  lc11 = values(lc11))
+
+# get raw tally matrix from 2001 to 2006
+m = table(v[,c('lc01','lc06')])
+
+# knit table (kable) of tally matrix by landcover value
+kable(m, format='pandoc', caption='Counts of change in landcover values from 2001 (rows) to 2006 (columns).')
+```
+
+**Question. Create transition probability matrix _P_ of landcover values from 2001 to 2006. Which landcover values exhibit no change? Which landcover values change the least in ranked from most to least chnage?**
+
+_**Tip**: Consider the diagonal values as equality (1 being no change), so the greatest deviation from this equality (ie difference from 1) indicates values changing the most.
+
+```{r probability matrix, results='asis'}
+# calculate transition matrix
+P = as.matrix(m / rowSums(m))
+write.csv(P, 'P_lc01to06.csv')
+
+# knit table (kable) of forecast
+kable(P, format='pandoc', caption='Transition probability matrix (_P_) derived from landcover changes from 2001 (rows) to 2006 (columns), a 5 year period.')
+```
+
+**Question. Using the transition probability matrix _P_ of landcover values from 2001 to 2006, predict 2011 values given 2006 values. Compare with 2011 actuals. Which 2011 landcover predictions were most closely matched with actuals?**
+
+```{r forecast matrix, results='asis'}
+# forecast 2011 using 2006 values and transition matrix
+f11 = table(v$lc06) %*% P
+
+# compare 2011 forecast with actuals
+z = merge(merge(merge(
+  # 2001 landcover counts
+  rename(
+    data.frame(table(v$lc01)), 
+    c('Var1'='value', 'Freq'='n_lc01')),    
+  # 2006 landcover counts
+  rename(
+    data.frame(table(v$lc06)), 
+    c('Var1'='value', 'Freq'='n_lc06')),    
+  by='value', all=T), # merge  
+  # 2011 actual landcover counts
+  rename(
+    data.frame(table(v$lc11)), 
+    c('Var1'='value', 'Freq'='n_lc11')),  
+  by='value', all=T), # merge  
+  # 2011 forecast landcover counts
+  data.frame(
+    value = names(f11[1,]),
+    n_f11 = round(f11[1,])),  
+  by='value', all=T) # merge
+
+# calculate as percentages
+z = within(z, {
+  pct_f11         = round(n_f11  / sum(n_f11)  * 100, 2)
+  pct_lc11        = round(n_lc11 / sum(n_lc11) * 100, 2)
+  pct_lc06        = round(n_lc06 / sum(n_lc06) * 100, 2)
+  pct_lc01        = round(n_lc01 / sum(n_lc01) * 100, 2)
+})
+
+# calculate percent diffs
+z = within(z, {
+  pctdif_06to11_f = pct_f11  - pct_lc06
+  pctdif_06to11   = pct_lc11 - pct_lc06
+  pctdif_01to06   = pct_lc06 - pct_lc01
+})
+
+# knit table (kable) of forecast
+kable(z, format='pandoc', caption='Counts (n_\\*), percent (pct_\\*) and percent differences (pctdif_\\*) between landcover for 2001, 2006 and 2011 (lc01, lc06, lc11) as well as forecast (f11) using a first order Markov model.')
+```
