@@ -2,7 +2,7 @@
 
 These Landscape Ecology labs were taught winter quarter 2015 at the [Bren School, UCSB](http://www.bren.ucsb.edu). Originally posted in a private online courseware GauchoSpace. Quickly posting this content for [NEON spatio-temporal data hackathon](http://www.neoninc.org/updates-events/events/hackathon-spatio-temporal-data-lesson-building).
 
-For an overview of the course, see the [syllabus](https://github.com/bbest/landscape-ecology-labs/raw/gh-pages/_syllabus.pdf).
+For an overview of the course, see the [syllabus](https://github.com/bbest/landscape-ecology-labs/raw/gh-pages/syllabus.pdf).
 
 ## Labs
 
