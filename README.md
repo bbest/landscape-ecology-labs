@@ -22,7 +22,7 @@ Used Rmarkdown to weave instructions with data preparation for various external 
 
     ![lab2_thumb.png](lab2_thumb.png)
     - [lab2_scale.zip](lab2_scale.zip)
-    - [lab3.Rmd](https://github.com/bbest/landscape-ecology-labs/blob/gh-pages/lab3.Rmd)
+    - [lab2.Rmd](https://github.com/bbest/landscape-ecology-labs/blob/gh-pages/lab2.Rmd)
     - [lab2.html](lab2.html)
 
 1. **Agents**: Physical Controls on Vegetation using ArcGIS
